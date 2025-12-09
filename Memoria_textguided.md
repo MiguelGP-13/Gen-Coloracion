@@ -1,0 +1,78 @@
+## Colorización Guiada por Texto
+
+El objetivo es desarrollar un modelo capaz de colorear imágenes utilizando como guía una descripción textual. La idea central es que la red no solo aprenda a reconstruir colores, sino que además incorpore información semántica explícita presente en el texto (por ejemplo: *"pétalos rojos"*, *"centro amarillo"*, etc.).
+
+Inicialmente se intentó utilizar el dataset original con animales y vehículos del resto de apartados del proyecto. Sin embargo, dicho conjunto de datos no incluía descripciones textuales ni etiquetas, lo que dificultaba enormemente la incorporación de información lingüística.  
+Se intentaron dos estrategias para suplir esta ausencia:
+
+1. **Generar descripciones automáticamente mediante un captioner preentrenado.**  
+   Resultó poco útil porque al trabajar con imágenes en escala de grises, el captioner no disponía de pistas sobre los colores reales y la información que producía era demasiado general, no aportaba señales relevantes al proceso de colorización que no entendiera ya el propio AE  colorizador ya que no mencionaba nada sobre colores. Además, era más costoso de ejecutar por que requería modelo pesado durante la preparación del dataset para generar los textos, ralentizando el flujo de trabajo.
+
+2. **Clasificar cada imagen según su color dominante.**  
+   Este método tampoco funcionó: muchas imágenes contenían varios colores relevantes, o el color dominante procedía del fondo en vez del objeto de interés. Esto generaba etiquetas incorrectas además de promts muy simples (nombres de los colores mayoritarios exclusivamente) que luego en la inferencía no serían iguales y hacía que el modelo no mejorase respecto al autoencoder base.
+
+Tras comprobar que ninguno de estos dos enfoques producía beneficios reales, decidimos recurrir a un dataset ya anotado con descripciones ricas y con referencias explícitas a colores.
+
+---
+
+### Dataset empleado  
+Seleccionamos el dataset `Oxford Flowers102`, que incluye para cada imagen de la flor correspondiente, una descripción textual detallada. Estas descripciones suelen mencionar explícitamente los colores de los pétalos, hojas o centros, lo cual resulta ideal para un modelo de colorización guiada.
+
+Para asegurar que el texto proporcionado realmente aportaba información cromática, construimos una lista de palabras relacionadas con colores (alrededor de 40 términos, incluyendo principalmente nombres de colores y tonalidades) y solo se conservaron aquellas imágenes cuyo texto contenía al menos una palabra de la lista. Con esto garantizamos que el modelo recibe mensajes relevantes sobre el color que queremos obtener.
+
+---
+
+### Arquitectura del modelo  
+El modelo desarrollado se basa en un **UNet** con condicionamiento textual mediante capas FiLM. Se trata de un diseño autoencoder con skip-connections, que permite preservar detalles espaciales mientras el texto influye en la reconstrucción del color.
+
+##### Embedding textual  
+Para transformar las descripciones en vectores utilizables por la red, empleamos un **modelo CLIP preentrenado** (`openai/clip-vit-base-patch32`). Únicamente se utilizó su codificador textual para obtener un embedding robusto, compacto y semánticamente rico del texto que luego pasar al AE colorizador. Además, al ser un modelo transformer grande, el embedding representa no solo palabras de color, sino también la estructura semántica del texto, proporcionando al modelo una guía contextual (por ejemplo: si el color se refiere a los pétalos, al centro, a las hojas, etc.). 
+
+##### Estructura general  
+- **Encoder:** cuatro bloques convolucionales que reducen progresivamente la resolución y extraen características visuales de nivel creciente.
+- **Bottleneck:** un bloque central donde se combina la información visual comprimida con la información textual y se enriquece.
+- **Decoder:** cuatro bloques de deconvolución que reconstruyen la imagen a color, fusionando la información procesada con los mapas del encoder mediante conexiones residuales. El último bloque del decoder produce la imagen RGB resultante (salida en 3 canales).
+
+##### Bloques convolucionales  
+Cada bloque convolucional del modelo está compuesto por dos operaciones principales. Una capa convolucional, que permiten extraer y transformar características visuales de forma progresiva. Y una capa de normalización por batch, aplicada tras las convoluciones para estabilizar la distribución de activaciones y facilitar el entrenamiento.
+
+A partir de esta estructura común, el modelo utiliza dos variantes según la etapa. En el encoder, los bloques emplean convoluciones estándar que reducen la resolución espacial de la imagen, capturando patrones cada vez más globales. En el decoder, los bloques recurren a convoluciones transpuestas, que aumentan la resolución y permiten reconstruir la imagen final a partir de las representaciones comprimidas.
+
+##### Condicionamiento textual
+El componente clave del modelo son las capas FiLM (Feature-wise Linear Modulation).  
+Estas capas permiten que el texto modifique directamente la activación de las capas convolucionales mediante dos parámetros aprendidos: $\gamma$ que controla la amplificación o atenuación por canal, y $\beta$ que  desplaza la activación por canal.
+
+La operación es:  
+$$
+\text{FiLM}(X) = X \cdot (1 + \gamma) + \beta
+$$
+
+donde cada canal de la activación se ajusta en función del embedding textual.  
+logrando que si el texto menciona “petals are bright red”, las FiLM  potencian las características asociadas a tonos rojizos en regiones que visualmente parezcan pétalos; si describe “dark green leaves”, favorece la aparición de verdes más apagados en la zona de hojas.
+
+El condicionamiento se aplica por primera vez en el bottleneck, donde se controla la representación mmás comprimida de la imagen, y luego se continua aplicando en las etapas del decoder, donde se ajusta el color reconstruido de forma más localizada según los FiLM, que actúan integrando la semántica lingüística en el flujo visual del UNet.
+
+---
+
+### Entrenamiento
+
+Durante el proceso de entrenamiento se utilizó una función personalizada `collate_fn` para preparar garantizar que cada imagen queda alineada con su descripción textual antes de introducirse en el modelo. 
+
+Para  la etapa de aprendizaje se empleó MSE (Mean Squared Error) como función de pérdida, comparando píxel a píxel la imagen generada con la imagen real. Para tarea de colorización resulta ser de las más útiles ya que consiste en aproximar colores continuos.  
+El modelo se entrenó sobre la partición de entrenamiento y se validó periódicamente para monitorizar su rendimiento.
+
+--- 
+
+### Resultados
+
+Para evaluar el desempeño del modelo se definió un procedimiento de testeo que carga el modelo entrenado y la sección de los datos reservada para pruebas.  
+Los resultados se presentan en forma de tríos de imágenes: (imagen en gris, predicción generada, referencia real) acompañados del prompt textual.
+
+Los resultados muestran que el modelo es capaz de producir una colorización muy buena por regiones salvo en algunos casos concetros donde confunde los pétalos con hojas. Suponemos que debido a que las descripciones textuales contienen detalles sobre colores y partes de la flor, se logra que el modelo aplique los colores en las zonas adecuadas gracias a que la información del texto complementa la estructura visual.
+
+---
+
+### Conclusiones
+
+La colorización guiada por texto ha demostrado ofrecer resultados muy sólidos cuando se dispone de imágenes acompañadas de descripciones ricas y precisas, como ocurre en el caso de las flores. Consideramos que esta estrategia podría extenderse a otros dominios donde la colorización sea relevante; sin embargo, la principal limitación reside en la disponibilidad de *captions* de calidad, algo poco común en la mayoría de los datasets existentes.
+Pensamos que sería factible aproximarse a un colorizador más general para todos los usos si se adoptara un enfoque de entrenamiento similar al de modelos como CLIP, que aprovechan casi todas las imágenes que hay en Internet junto a su texto alternativo. No obstante, un esfuerzo de esta magnitud requeriría modelos de mayor capacidad y recursos computacionales sustancialmente superiores.
