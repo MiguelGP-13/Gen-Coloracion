@@ -1,0 +1,189 @@
+\section{Autoencoder}
+Comenzaremos nuestro proyecto probando ciertos modelos sencillos para ver su desempeño sobre el dataset STL-10 \cite{coates2011analysis}. En este apartado hablaremos sobre dos diferentes tipos de autoencoders cuya única entrada es una imagen en blanco y negro y su salida es la imagen reconstruida a color. 
+
+\subsection{U-Net Autoencoder}
+El modelo implementado sigue una arquitectura tipo U-Net simétrica \cite{ronneberger2015unet}. A diferencia de un autoencoder secuencial estándar, esta red incorpora conexiones de salto (skip connections) que unen las capas del codificador con sus correspondientes en el decodificador.
+La arquitectura se compone de tres bloques funcionales detallados a continuación: 
+
+\begin{itemize}
+    \item Encoder: recibe un tensor de dimensiones (96×96×1). Consta de 3 bloques secuenciales. Cada bloque aplica una convolución de 3×3 con activación ReLU y padding "same" para mantener las dimensiones, seguida inmediatamente de una operación de Max Pooling que reduce el tamaño espacial a la mitad.
+    \item Cuello de botella:  comprime al máximo la información (12x12). Se utiliza una capa convolucional de 256 filtros para conectar ambos bloques.
+    \item Decoder: aplicamos UpSampling2D para duplicar el tamaño de la imagen cada vez. Uno de sus detalles más importantes es que se concatena información con capas del encoder permitiendo al modelo recordar la ubicación exacta de los bordes y texturas que suelen perderse durante la compresión del Max Pooling.\\
+    Finalmente, se utiliza una capa convolucional con activación sigmoide que proyecta el resultado a los tres canales R, G, B.
+\end{itemize}
+
+\subsection{Residual U-Net Autoencoder}
+Este seugndo modelo propuesto sustituye las convoluciones estándar por Bloques Residuales e introduce mecanismos de normalización y submuestreo aprendible \cite{zhang2018road}. A continuación se detallan sus componentes clave:
+
+\begin{itemize}
+    \item Bloques residuales: Esta es la unidad fundamental de la red. A diferencia de una capa convolucional simple que intenta aprender una función H(x) directamente, este bloque intenta aprender el residuo F(x), de tal forma que la salida sea H(x)=F(x)+x.
+    \item Encoder: similar al anterior
+    \item Decoder: se diferencia del anterior porque utiliza capas deconvolucionales en lugar de capas upsampling. Las capas deconvolucionales tienen pesos entrenables. La red aprende la mejor manera de aumentar la resolución de la imagen, recuperando texturas y bordes de forma más inteligente que una simple interpolación bilineal.\\
+    Finalmente, se utiliza una capa convolucional con activación sigmoide que proyecta el resultado a los tres canales R, G, B.
+\end{itemize}
+
+\subsection{Justificación de modelos}
+Se descarta el uso de autoencoders secuenciales simples debido a que el proceso de compresión provoca una pérdida irreversible de información espacial. Esto provoca el fenómeno de color bleeding, donde el color se desborda de los contornos al no existir una referencia clara de los bordes durante la reconstrucción.\\
+
+Por el contrario,  la elección de las arquitecturas U-Net y ResU-Net se fundamenta en su capacidad para resolver este compromiso:
+\begin{itemize}
+\item Recuperación Espacial: Las skip connections reintroducen los detalles de alta resolución bordes y texturas directamente desde la entrada, garantizando que el color se aplique con cierta precisión sobre la estructura original.
+
+\item Capacidad de Aprendizaje: La inclusión de bloques residuales permite aumentar la profundidad de la red sin degradar el entrenamiento, facultando al modelo para aprender relaciones de color complejas y sutiles que un modelo superficial no podría captar.
+\end{itemize}
+
+\subsection{Entrenamiento}
+Ambos modelos se compilan utilizando el optimizador Adam y la función de pérdida MSE, estándar para regresión de píxeles. Sin embargo, para la ResU-Net se ha reducido el learning rate a 0.0005 para garantizar la estabilidad del gradiente dada su mayor profundidad.\\
+Además, es interesante comentar la diferencia significativa en la carga computacional debido a la complejidad de las arquitecturas:
+\begin{itemize}
+\item Modelo U-Net: menos de 2 min/epoch. Al ser más ligero, permite un entrenamiento más extenso (40 epochs).
+
+\item Modelo ResU-Net: sobre 8 min/epoch. La inclusión de bloques residuales, normalización por lotes y mayor número de filtros (hasta 512) incrementa drásticamente las operaciones por ciclo, lo que ha obligado a limitar el entrenamiento.
+\end{itemize}
+
+Para acelerar el entrenamiento de ambos modelos se ha implementado una política de Mixed Precision (FP16).
+
+\subsection{Resultados}
+Mostramos en la siguiente tabla las métricas obtenidas en test de ambos modelos:
+
+\begin{table}[H]
+\centering
+\caption{Comparación de métricas entre U-Net y ResU-Net}
+\vspace{0.2cm}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Métrica} & \textbf{U-Net} & \textbf{ResU-Net} \\ \hline
+SSIM  & 0.9323 & 0.9360 \\ \hline
+PSNR  & 25.3312 & 25.0441 \\ \hline
+LPIPS & 0.1345 & 0.1466 \\ \hline
+\end{tabular}
+\end{table}
+Los resultados cuantitativos muestran un rendimiento muy parejo entre ambos modelos, con ligeras variaciones atribuibles a la diferencia en el tiempo de entrenamiento (40 épocas vs 5 épocas):
+
+\begin{itemize}
+    \item \textbf{SSIM (estructura):} La ResU-Net (0.9360) supera ligeramente a la U-Net. Esto confirma que los bloques residuales y la mayor capacidad de la red ayudan a reconstruir mejor la estructura y los bordes de la imagen, incluso con menos entrenamiento.
+
+    \item \textbf{PSNR y LPIPS (fidelidad y percepción):} La U-Net obtiene mejores puntuaciones (mayor PSNR, menor LPIPS). Esto se debe a que, al haber entrenado durante 40 épocas, ha tenido tiempo de converger hacia una solución más estable y minimizar el error medio, mientras que la ResU-Net (con solo 5 épocas) quizá aún no haya alcanzado su potencial máximo.
+\end{itemize}
+
+Observamos a continuación ciertas imágenes:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{images/unet.png}
+    \caption{Imágenes generadas con U-Net}
+    \label{fig:unet}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{images/resunet.png}
+    \caption{Imágenes generadas con ResU-Net}
+    \label{fig:resunet}
+\end{figure}
+
+Vemos una mayor vivacidad y acierto con los colores de la U-Net que corresponde con los mejores resultados obtenidos en PSNR y LPIPS, pero vemos que su estructura es algo peor porque sus bordes coloreados son algo desacertados.
+
+\subsection{Conclusiones}
+El análisis comparativo entre las dos arquitecturas propuestas revela un claro compromiso entre complejidad y rendimiento.\\
+Si bien la ResU-Net demostró una superioridad estructural latente (mejor SSIM) gracias a sus bloques residuales, su elevado coste computacional limitó la convergencia cromática en comparación con la U-Net, que logró mayor fidelidad de color gracias a un entrenamiento más extenso. \\
+A pesar de las limitaciones intrínsecas del modelo autoencoder y la pérdida MSE, que tienden a generar tonos desaturados ante la incertidumbre, los resultados cualitativos han superado las expectativas iniciales para modelos de esta complejidad,
+
+\section{VAE}
+En este apartado, probaremos dos diferentes VAE sobre el mismo dataset y cuya entrada y salida es la misma que los autoencoders anteriores.
+\subsection{VAE Denso}
+Este primer modelo implementa un VAE clásico con un cuello de botella denso \cite{kingma2013auto}:
+\begin{itemize}
+
+\item Encoder: Rompe la estructura espacial de la imagen. Tras las convoluciones, utiliza Flatten para convertir el mapa de características 2D en un vector plano 1D, comprimiéndolo todo mediante capas Dense.
+
+\item Latent Space: Es un vector de números, sin altura ni anchura.
+
+\item Decoder: Debe "reconstruir" el espacio desde cero. Utiliza una capa densa para expandir el vector y luego Reshape para forzarlo a tener forma de imagen antes de aplicar las deconvoluciones.
+\end{itemize}
+
+\subsection{VAE Convolucional}
+Este modelo implementa un Autoencoder Variacional que mantiene la topología 2D de la imagen a lo largo de todo el proceso, evitando las capas densas que destruyen la información espacial. Sus componentes técnicos clave son: 
+
+\begin{itemize}
+
+\item Entrenamiento Estocástico: Implementa el Truco de Reparametrización 
+\[
+z = \mu + \sigma \cdot \varepsilon
+\]
+separando la aleatoriedad para permitir el cálculo de gradientes y el entrenamiento de la red.
+
+\item Encoder Aprendible: Sustituye el MaxPooling fijo por Convoluciones con Stride, otorgando a la red la capacidad de aprender cómo reducir la dimensión sin perder información estructural crítica. Utiliza activación LeakyReLU para garantizar la estabilidad del flujo de gradientes.
+
+\item Reconstrucción: El decodificador recupera la resolución original mediante Convoluciones Transpuestas, proyectando los detalles de color directamente desde los mapas de características espaciales del cuello de botella.
+
+\end{itemize}
+\subsection{Justificación de modelos}
+Estos modelos se implementan para abordar la ambigüedad intrínseca de la colorización porque un objeto gris puede tener múltiples colores válidos.
+
+Mientras que los modelos deterministas tienden a promediar colores generando tonos apagados ante la duda, los VAEs aprenden una distribución de probabilidad, permitiendo generar colores más vivos y diversos.
+
+Además, la creación del modelo VAE convolucional se justifica porque al mantener un espacio latente tensorial no aplanado, preserva la correlación espacial de los píxeles, resultando en una reconstrucción geométrica superior.
+
+\subsection{Entrenamiento}
+Ambos modelos se basan en dos términos fundamentales en su función de pérdida: un término de reconstrucción y un término de regularización mediante divergencia KL. Sin embargo, en cada modelo lo implementamos de diferente forma
+
+El primer modelo, utiliza MSE para medir la discrepancia entre la imagen reconstruida y la imagen real en color. Tras observar los resultados de este modelo, decidimos implementar MAE en el segundo modelo porque penaliza de forma lineal los errores, lo que tiende a producir reconstrucciones más nítidas.\\
+Por otra parte, ambos modelos emplean la misma expresión para la divergencia KL. Sin embargo, en el primer modelo la KL se añade directamente a la pérdida total porque es un espacio latente relativamente pequeño.
+\[
+\mathcal{L} = \mathcal{L}_{\text{rec}} + \mathcal{L}_{\text{KL}}
+\]
+Esto ayuda a que la distribución latente sea estable y bien organizada.
+
+En el segundo modelo la KL se multiplica por un peso \(\lambda\) muy pequeño.
+\[
+\mathcal{L} = \mathcal{L}_{\text{rec}} + \lambda \cdot \mathcal{L}_{\text{KL}}
+\]
+La razón es que el espacio latente ahora es mucho más grande. Si se utilizara la KL sin ponderación, esta dominaría por completo la pérdida, impidiendo que el modelo aprenda a reconstruir correctamente.
+
+El tiempo de entrenamiento de ambos modelos es muy similar (2 min/epoch). Para estos modelos se ha desactivado Mixed Precision por sencillez.
+
+\subsection{Resultados}
+Mostramos en la siguiente tabla las métricas obtenidas en test de ambos modelos:
+
+\begin{table}[H]
+\centering
+\caption{Comparación de métricas entre VAE Denso y VAE Convolucional}
+\vspace{0.2cm}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Métrica} & \textbf{VAE Denso} & \textbf{VAE Convolucional} \\ \hline
+SSIM  & 0.0600 & 0.9338 \\ \hline
+PSNR  & 6.3406 & 25.1147 \\ \hline
+LPIPS & 0.6884 & 0.1485 \\ \hline
+\end{tabular}
+\end{table}
+
+La comparación cuantitativa evidencia una diferencia abismal en el rendimiento de ambas arquitecturas, validando la importancia crítica de la preservación espacial en el espacio latente:
+
+Los valores obtenidos (SSIM: 0.06, PSNR: 6.34) indican un colapso estructural casi total del VAE Denso. Al aplanar los mapas de características y utilizar capas densas, el modelo pierde la correlación espacial de los píxeles, resultando en una salida que no logra reconstruir ni siquiera la forma de los objetos, comportándose prácticamente como ruido aleatorio.
+
+Por el contrario, el modelo totalmente convolucional alcanza un SSIM de 0.9338, situándose al mismo nivel de calidad que los modelos autoencoder. Esto demuestra que mantener la topología 2D en el cuello de botella es un requisito indispensable para la colorización.
+
+La métrica perceptual confirma lo anterior (LPIPS): el VAE Denso (0.6884) genera imágenes irreconocibles para el ojo humano, mientras que el CVAE (0.1485) produce resultados coherentes y naturales.
+
+Con una inspección visual observamos reflejados los resultados obtenidos cuantitativamente por las métricas:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{images/dvae.png}
+    \caption{Imágenes generadas con VAE Denso}
+    \label{fig:placeholder}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{images/cvae.png}
+    \caption{Imágenes generadas con VAE Convolucional}
+    \label{fig:placeholder}
+\end{figure}
+
+Observamos una imagen muy borrosa del primer VAE indicando que no ha sido capaz de reconstruir la imagen. Con el segundo VAE sí tenemos una reconstrucción óptima de la imagen pero la colorización no es correcta.
+
+\subsection{Conclusiones}
+La experimentación con modelos variacionales evidencia que la preservación de la topología en el espacio latente es un requisito indispensable, habiendo logrado el VAE convolucional rescatar la coherencia estructural tras el colapso del enfoque denso. Sin embargo, pese a esta validación arquitectónica, es necesario señalar que los resultados visuales finales no logran superar la calidad obtenida por los autoencoders. La restricción de regularización impuesta por la Divergencia KL, sumada a la optimización de pérdidas píxel a píxel, tiende a producir imágenes con texturas suavizadas y menor definición cromática. Esta limitación perceptiva justifica el siguiente paso en la investigación: la transición hacia las Redes GAN, cuyo mecanismo de discriminación busca romper precisamente esta barrera de borrosidad para forzar la generación de detalles de alta frecuencia y un realismo visual superior.

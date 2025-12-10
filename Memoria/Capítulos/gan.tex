@@ -1,0 +1,114 @@
+\section{GAN}
+
+Tras evaluar los modelos deterministas (Autoencoders y VAEs), exploramos ahora una 
+arquitectura GAN para abordar la colorización desde este enfoque. 
+A diferencia de los modelos anteriores, cuyo objetivo es minimizar un error de reconstrucción, 
+las GAN introducen el discriminador que fuerza al generador a producir imágenes más realistas. Esto permite obtener resultados más vivos y definidos, 
+especialmente en regiones donde la decisión del color es ambigua.
+
+Nuestro modelo sigue una estructura similar al método \textit{pix2pix}, donde el objetivo es 
+aprender una transformación de imágenes en escala de grises (canal L del espacio Lab) a 
+imágenes a color (canales a y b). La tarea se formula como un problema de 
+\textit{image-to-image translation}.
+
+\subsection{Arquitectura del Generador (U-Net)}
+Para el generador empleamos una U-Net, ya que sus conexiones de salto permiten mantener 
+la estructura espacial con gran fidelidad. En el contexto de la colorización, esto es 
+especialmente importante: aunque el color puede ser ambiguo, la ubicación de los bordes y 
+texturas debe conservarse con precisión.
+
+El generador recibe como entrada un tensor $(128\times128\times1)$ correspondiente al 
+canal de luminancia L normalizado. Su estructura se divide en:
+
+\begin{itemize}
+    \item \textbf{Encoder:} consiste en cinco bloques de \textit{downsampling}, implementados con 
+    convoluciones de 4×4 y stride 2. Cada bloque duplica el número de filtros (64, 128, 256, 512, 512),
+    reduciendo la imagen hasta un mapa de 4×4. Se utiliza LeakyReLU como activación y 
+    BatchNorm en todos los niveles excepto el primero.
+
+    \item \textbf{Decoder:} está formado por cuatro bloques de \textit{upsampling} mediante 
+    \textit{Conv2DTranspose}. Los dos primeros incluyen \textit{dropout} para introducir ruido 
+    estructurado y evitar que el generador memorice patrones del conjunto de entrenamiento.
+    Cada capa del decoder concatena su salida con la activación correspondiente del encoder 
+    (skip connection), restaurando así la información espacial perdida.
+
+    \item \textbf{Salida:} una convolución transpuesta final de 4×4 produce una imagen 
+    $(128\times128\times2)$ con activación \textit{tanh}, que representa los canales a y b ya 
+    normalizados.
+\end{itemize}
+
+Esta arquitectura permite que el modelo coloree respetando forma, contornos y textura, incluso 
+en regiones donde un autoencoder simple tiende a producir manchas o difuminados.
+
+\subsection{Arquitectura del Discriminador (PatchGAN)}
+El discriminador evalúa si una imagen generada es realista comparándola con la 
+imagen real. En lugar de clasificar la imagen completa, utilizamos un discriminador 
+PatchGAN, que divide la imagen en parches locales y decide para cada uno si el contenido 
+luminancia/color es coherente.
+
+Su estructura consiste en:
+
+\begin{itemize}
+    \item Concatenación de la entrada: el discriminador recibe una pareja formada por la 
+    imagen en escala de grises (L) y la imagen color (real o generada), que se combinan en 
+    un tensor $(128\times128\times3)$.
+
+    \item Tres bloques de \textit{downsampling} con convoluciones de 4×4, stride 2 y LeakyReLU, 
+    que reducen progresivamente la resolución y capturan texturas locales.
+
+    \item Un nivel adicional de convolución sin \textit{downsampling}, que amplía el campo 
+    receptivo sin perder detalle.
+
+    \item Una última convolución produce un mapa de activación $(14\times14\times1)$ donde 
+    cada valor indica si el parche correspondiente parece real o generado.
+\end{itemize}
+
+PatchGAN es especialmente útil porque penaliza los errores de coloración finos (bordes, 
+texturas, transiciones) sin imponer restricciones globales demasiado rígidas.
+
+\subsection{Función de pérdida}
+La pérdida total combina dos términos:
+
+\begin{itemize}
+    \item \textbf{Pérdida adversaria} (\( \mathcal{L}_{GAN} \)): obliga al generador a producir imágenes 
+    indistinguibles para el discriminador. Está implementada mediante binary crossentropy.
+
+    \item \textbf{Pérdida L1} (\( \mathcal{L}_{L1} \)): calcula el MAE entre los canales de 
+    color reales y generados. Esto estabiliza el entrenamiento y evita colores 
+    fuera de rango o inconsistentes.
+\end{itemize}
+
+La pérdida global se define como:
+\[
+\mathcal{L}_G = \mathcal{L}_{GAN} + \lambda \cdot \mathcal{L}_{L1},
+\]
+donde utilizamos \(\lambda = 100\).
+
+\subsection{Entrenamiento}
+Tanto el generador como el discriminador se entrenan con el optimizador Adam 
+(\texttt{lr = 2e-4}, \(\beta_1 = 0.5\)), como se suele recomendar para que el entrenamiento de la gan sea estable.
+
+Durante cada iteración:
+
+\begin{enumerate}
+    \item El generador predice los canales a y b a partir del canal L.
+    \item El discriminador recibe tanto la imagen real (L + ab) como la generada.
+    \item Se calcula la pérdida, la pérdida L1 y los gradientes de ambos modelos.
+    \item Se actualizan las dos redes de forma independiente.
+\end{enumerate}
+
+Entrenamos el modelo durante 40 épocas utilizando un subconjunto del dataset STL-10 
+(20.000 imágenes no etiquetadas para entrenamiento, 1.000 para validación y 3.000 para test). 
+Todas las imágenes se transforman al espacio Lab mediante \textit{skimage} y se normalizan a 
+valores entre \([-1, 1]\). El tamaño final utilizado es \(128\times128\), lo que equilibra detalle y 
+tiempo de cómputo.
+
+\subsection{Resultados}
+En las primeras épocas las colorizaciones muestran tonos desaturados y cierta 
+inconsistencia en regiones complejas. A medida que avanza el 
+entrenamiento, el modelo aprende a producir colores más vivos y transiciones suaves.
+
+Frente a los autoencoders, la GAN genera imágenes perceptualmente más atractivas, con 
+mayor viveza y contraste. Sin embargo, también muestra cierta variabilidad en 
+zonas ambiguas, consecuencia directa de la optimización adversaria y del carácter 
+condicional del modelo.

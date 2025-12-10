@@ -1,0 +1,97 @@
+\documentclass[12pt]{article}
+\setlength{\parindent}{0pt}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{openwork}
+
+\title{Coloración de imágenes}
+\author[1]{Álvaro Felipe Pérez}
+\author[1]{Miguel Gómez Prieto}
+\author[1]{Hugo Gómez-Caraballo Lopez-Romero}
+\author[1]{Carlos Serrano Pinós}
+\affil[1]{Estudiante CDIA, UPM, Madrid}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+La colorización automática de imágenes en escala de grises constituye un desafío relevante en visión por computador, al requerir la generación de información cromática plausible a partir de datos incompletos. En este trabajo se presenta un análisis comparativo de diferentes arquitecturas de aprendizaje profundo aplicadas a la colorización de imágenes, incluyendo Autoencoders (AE), Variational Autoencoders (VAE), redes UNet, Generative Adversarial Networks (GAN), modelos de difusión y enfoques guiados por texto. Los experimentos se realizaron sobre el conjunto de datos STL‑10 y un dataset complementario de flores, con el objetivo de evaluar la capacidad de cada modelo para reconstruir color de manera realista y coherente con el contenido semántico. Se discuten las ventajas y limitaciones de cada aproximación, así como la influencia de la resolución y el tipo de condicionamiento en la calidad perceptual de los resultados. Los hallazgos contribuyen a comprender el potencial y las fronteras actuales de las técnicas de colorización basadas en deep learning. \\
+\textbf{Keywords:} Image colorization, Autoencoder, UNet, Generative Adversarial Network, Diffusion models, Text‑guided coloration, Computer vision
+\end{abstract}
+
+\input{Capítulos/1-introduccion}
+\input{Capítulos/2-estado-cuestion}
+\input{Capítulos/basics}
+\input{Capítulos/gan}
+\input{Capítulos/difussion}
+\input{Capítulos/6-text-guided}
+\input{Capítulos/7-conclusion}
+
+\section{Help}
+\subsection{Tables}
+
+Tables must be centered on the page. A minimum font size of 8 points is recommended for all text within tables. An example of a table is shown below.
+\begin{table*}[hbt!]
+    \centering
+    \begin{tblr}{c|c}
+        \toprule
+        \textbf{Note Name} & \textbf{Frequency (Hz)} \\
+        \midrule
+        F4 & 349.23 \\
+        \midrule
+        G4 & 392 \\
+        \midrule
+        A4 & 440 \\
+        \midrule
+        B4 & 493.88 \\
+        \midrule
+        C5 & 523.25 \\
+        \bottomrule
+    \end{tblr}
+    \caption{Note names and their corresponding frequencies.}
+\end{table*}
+
+\subsection{Captions}
+
+Captions should follow each figure or table and conform to the guidelines below:
+
+\begin{itemize}[noitemsep]
+    \item Please number figures and tables in order and make sure that image files can be clearly identified from their filenames.
+    \item Images not created by the author must have a catalogue-style caption supplied as a separate list. Captions should include:
+    \begin{itemize}[noitemsep]
+        \item [$\circ$] Maker
+        \item [$\circ$] Title (in italics)
+        \item [$\circ$] Date
+        \item [$\circ$] Medium
+        \item [$\circ$] Measurements
+        \item [$\circ$] Location (Institution, Geographic Location)
+        \item [$\circ$] Copyright statement
+        \item [$\circ$] Courtesy line and/or photo credit
+    \end{itemize}
+\end{itemize}
+
+An example of a caption is shown below: 
+
+\textbf{Fig 1.} Yinka Shonibare, The Swing (after Fragonard), 2001, mannequin, cotton costume, 2 slippers, swing seat, 2 ropes, oak twig and artificial foliage, 3.3 x 3.5 x 2.2 m (Tate, London) © Yinka Shonibare; image courtesy Stephen Friedman Gallery, London.
+
+\subsection{Equations}
+
+Equations should be placed on separate lines and numbered. An example is shown below.
+
+\begin{equation}
+f(x) = a_0 + \sum_{n=1}^{\infty} \left( a_n \cos\frac{n\pi x}{L} + b_n \sin\frac{n\pi x}{L} \right)
+\end{equation}
+
+\subsection{Citas}
+Para citar le pedis a chat que os de el bibtex del paper, o sino en arxiv está y lo meteis en references.bib.
+
+Luego citáis así: \cite{Zabari2023Diffusing}
+
+\section*{Agradecimientos}
+...
+
+\printbibliography
+
+\end{document}
