@@ -1,20 +1,20 @@
 # Ignorar archivos auxiliares de LaTeX en carpeta memoria
-memoria/*.aux
-memoria/*.bbl
-memoria/*.bcf
-memoria/*.blg
-memoria/*.fdb_latexmk
-memoria/*.fls
-memoria/*.log
-memoria/*.out
-memoria/*.run.xml
-memoria/*.synctex.gz
-memoria/*.toc
-memoria/*.lof
-memoria/*.lot
-memoria/*.idx
-memoria/*.ilg
-memoria/*.ind
+Memoria/*.aux
+Memoria/*.bbl
+Memoria/*.bcf
+Memoria/*.blg
+Memoria/*.fdb_latexmk
+Memoria/*.fls
+Memoria/*.log
+Memoria/*.out
+Memoria/*.run.xml
+Memoria/*.synctex.gz
+Memoria/*.toc
+Memoria/*.lof
+Memoria/*.lot
+Memoria/*.idx
+Memoria/*.ilg
+Memoria/*.ind
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
