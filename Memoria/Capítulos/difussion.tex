@@ -5,45 +5,152 @@ Los modelos de difusión se han consolidado como una de las técnicas más poten
 
 
 \[
-q(x_t \mid x_{t-1}) = \mathcal{N}(x_t; \sqrt{1-\beta_t} \, x_{t-1}, \beta_t I),
+    q(x_t \mid x_{t-1}) = \mathcal{N}(x_t; \sqrt{1-\beta_t} \, x_{t-1}, \beta_t I),
 \]
 
 
 
-donde $\beta_t$ controla la cantidad de ruido en el paso $t$. El modelo aprende la distribución inversa $p_\theta(x_{t-1} \mid x_t)$ para recuperar la señal original. Tras suficientes iteraciones, se obtiene una imagen coherente a partir de ruido inicial. Estos métodos han demostrado gran capacidad en tareas de síntesis y edición de imágenes \cite{Zabari2023Diffusing}.  
+donde $\beta_t$ controla la cantidad de ruido en el paso $t$. El modelo aprende la distribución inversa $p_\theta(x_{t-1} \mid x_t)$ para recuperar la señal original. Tras suficientes iteraciones, se obtiene una imagen coherente a partir de ruido inicial. Estos métodos han demostrado gran capacidad en tareas de síntesis y edición de imágenes \cite{Zabari2023Diffusing}.
 En el contexto de la colorización, los modelos de difusión resultan útiles porque permiten generar detalles cromáticos plausibles a partir de información parcial (imágenes en escala de grises), preservando bordes y texturas.
 
 \subsection{Arquitectura}
 
-Nuestro modelo se basa en el \textit{VAE} de \textit{Stable Diffusion 1.5} como codificador–decodificador, sobre el cual se han probado distintas variantes de la arquitectura \texttt{UNet}:
+El modelo se basa en el \textit{VAE} de \textit{Stable Diffusion 1.5} como codificador–decodificador, sobre el cual se han probado distintas variantes de la arquitectura \texttt{UNet}:
 
-\begin{itemize}
-    \item Entrenamiento de un \texttt{UNet} desde cero.
-    \item \textit{Fine-tuning} del \texttt{UNet} original de \textit{Stable Diffusion}, restringido únicamente al último bloque.
-    \item Adaptación mediante \texttt{LoRA} sobre el \texttt{UNet} de \textit{Stable Diffusion}.
-\end{itemize}
+\subsubsection{Entrenamiento desde cero del UNet}
 
-El entrenamiento se ha realizado con 25\,000 imágenes del dataset \texttt{STL-10}. Al tratarse de imágenes pequeñas (96$\times$96 píxeles), esto limita la capacidad del modelo para aprender detalles finos y puede afectar la nitidez cromática.  
-Dado que el proceso es muy lento, se calcularon previamente las representaciones latentes con el \textit{VAE}, entrenando directamente sobre ellas para reducir el coste computacional.
+En este enfoque se diseñó y entrenó un \texttt{UNet} desde cero, inicializando todos los
+parámetros de manera aleatoria. La arquitectura utilizada incluye tres bloques descendentes y
+tres ascendentes, con mecanismos de atención en el nivel intermedio. Todos los parámetros del
+modelo fueron entrenados, lo que permite un control completo sobre el proceso de aprendizaje.
+Este modelo, pese a ser más pequeño y por lo tanto con menor capacidad, aprende directamente
+la tarea de colorización, especializandose desde el inicio.
 
-\subsection{Función de pérdida}
+\subsubsection{Fine-tuning del UNet de Stable Diffusion}
 
-La función de pérdida combina dos términos principales:
+En este caso se partió del \texttt{UNet} preentrenado de \textit{Stable Diffusion}, restringiendo
+el ajuste únicamente al tercer bloque ascendente y al bloque intermedio. El resto de parámetros
+se mantuvieron congelados, de modo que sólo estas capas fueron entrenadas. Esta estrategia reduce
+el coste computacional y el riesgo de sobreajuste, aprovechando el conocimiento previo del modelo
+y adaptándolo específicamente a la tarea de colorización.Por otro lado, esta estrategia es la más costosa computacionalmente
 
-\begin{itemize}
-    \item \textbf{Pérdida de reconstrucción}: error entre la imagen colorizada y la referencia.
-    \item \textbf{Pérdida de difusión}: error de predicción del ruido en cada paso de denoising.
-\end{itemize}
+\subsubsection{Adaptación mediante LoRA}
 
-La combinación de ambas permite que el modelo aprenda tanto a reconstruir colores plausibles como a mantener la coherencia estructural de la imagen.
+La tercera estrategia consistió en aplicar \texttt{LoRA} (\textit{Low-Rank Adaptation}) sobre el
+\texttt{UNet} de \textit{Stable Diffusion}. Se insertaron matrices de bajo rango en las capas de
+atención, concretamente en los módulos de consulta y valor, con un rango de $r=4$, un factor de
+escalado de $\alpha=16$ y un \texttt{dropout} de 0.05 para regularización. Este enfoque permite
+adaptar el modelo de manera eficiente, reduciendo drásticamente el número de parámetros entrenables
+sin necesidad de modificar el resto de la arquitectura, lo que lo convierte en una opción muy
+mucho más eficiente que el finetuning.
+
 
 \subsection{Entrenamiento}
 
-El entrenamiento se llevó a cabo sobre las latentes del \textit{VAE}, utilizando Adam como optimizador.  
-Se exploraron diferentes configuraciones de número de pasos de difusión, observando que este parámetro no resulta crítico en la calidad final.  
-El fine-tuning del \texttt{UNet} se limitó al último bloque para reducir el coste y evitar sobreajuste, mientras que la variante LoRA permitió adaptar el modelo con menor número de parámetros entrenables.
+El entrenamiento se realizó con 25\,000 imágenes del dataset \texttt{STL-10}, que al tratarse de 
+imágenes pequeñas (96$\times$96 píxeles) limitan la capacidad del modelo para aprender detalles 
+finos y pueden afectar la nitidez cromática. Para reducir el elevado coste computacional, se 
+calcularon previamente las representaciones latentes con el \textit{VAE}, entrenando directamente 
+sobre ellas mediante el optimizador Adam y utilizando como función de pérdida el MSE. 
 
-\subsection{Resultados preliminares}
+En cuanto a las estrategias de adaptación, el \textit{fine-tuning} del \texttt{UNet} se restringió al último 
+bloque con el fin de disminuir el coste y evitar el sobreajuste, mientras que la variante LoRA 
+permitió ajustar el modelo de manera eficiente con un menor número de parámetros entrenables. 
+Dado que el proceso de entrenamiento resultó muy lento, el número de épocas fue limitado: se 
+entrenaron 200 épocas para el \texttt{UNet} desde cero, 30 épocas para la variante LoRA y 20 
+épocas para el \textit{fine-tuning}.
+
+
+\begin{figure}[htbp]
+    \centering
+    \caption{Epoch 175 de entrenamiento del la UNet desde cero:}
+    \begin{subfigure}{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/color_scale_1.2.png}
+        \caption{Color scale = 1.2}
+    \end{subfigure}
+
+    \begin{subfigure}{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/color_scale_1.4.png}
+        \caption{Color scale = 1.4}
+    \end{subfigure}
+
+    \begin{subfigure}{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/color_scale_1.6.png}
+        \caption{Color scale = 1.6}
+    \end{subfigure}
+
+    \begin{subfigure}{\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/color_scale_1.8.png}
+        \caption{Color scale = 1.8}
+    \end{subfigure}
+\end{figure}
+\FloatBarrier
+
+
+\subsection{Hiperparámetros}
+En este modelo nos encontramos 2 hiperparámetros importantes para la calidad al generar una imagen. 
+
+El primero es los \textbf{steps}, es decir, el número de pasos que se dan de 
+eliminación de ruido. Se ha probado con un amplio rango de valores (2, 15, 50 y 100). En 
+\textit{Diffusing Colors: Image Colorization with Text Guided Diffusion} \cite{Zabari2023Diffusing} 
+se utiliza 50 pasos para generar. En nuestro experimento se puede ver que a partir de los 15
+pasos, ya no hay diferencia.
+
+El segundo es el \textbf{color scale}. Este hiperparámetro modifica cuanto cambia el color.
+Cuanto más grande el valor, más intenso será el color de la imagen. 
+Ha resultado ser mucho más importante el color scale en el resultado que el número de 
+pasos. En nuestros experimentos, se ha definido 1.5 como el mejor color scale.
+
+
+
+\subsection{Resultados}
+
+Para la evaluación cuantitativa de la colorización de imágenes se han considerado tres métricas
+complementarias. La métrica \texttt{LPIPS} (\textit{Learned Perceptual Image Patch Similarity})
+se apoya en redes neuronales preentrenadas para estimar la similitud perceptual entre la imagen
+generada y la referencia, capturando diferencias relevantes para la percepción humana más allá
+de la comparación directa de píxeles. La \texttt{MSE} (\textit{Mean Squared Error}) calcula el
+error cuadrático medio entre ambas imágenes, proporcionando una medida objetiva de la fidelidad
+numérica de la reconstrucción, aunque puede ser menos sensible a la percepción visual. Finalmente,
+la métrica \texttt{CIEDE2000}, propuesta por la Comisión Internacional de Iluminación, cuantifica
+la diferencia de color teniendo en cuenta la percepción humana; en el contexto de la colorización
+es especialmente importante, ya que permite evaluar si los tonos generados coinciden con los
+colores reales de referencia incluso en regiones donde pequeñas variaciones cromáticas resultan
+perceptualmente significativas. En conjunto, estas métricas ofrecen una visión más completa del
+rendimiento del modelo, equilibrando precisión numérica, calidad perceptual y fidelidad cromática.
+
+
+\begin{table}[htbp]
+    \centering
+    \caption{Resultados de colorización con modelos de difusión.}
+    \label{tab:diffusion_resultados}
+    \begin{tabular}{lccc}
+        \hline
+        \textbf{Modelo}             & \textbf{LPIPS}   & \textbf{MSE}    & \textbf{CIEDE2000} \\
+        \hline
+        UNet desde cero             & 0.1437           & \textbf{461.28} & 11.86             \\
+        Fine-tuning último bloque   & 0.1416           & 554.04          & 13.76             \\
+        LoRA sobre Stable Diffusion & \textbf{0.1322 } & 499.08          & \textbf{11.77}    \\
+        \hline
+    \end{tabular}
+\end{table}
+\FloatBarrier
+
+Al analizar los resultados, se observa que los tres modelos mantienen la estructura global de 
+las imágenes sin deformaciones, como refleja el bajo valor de \texttt{LPIPS}. Sin embargo, en la 
+tarea de colorización los modelos presentan limitaciones, ya que los colores generados se alejan 
+de los tonos de referencia. La métrica \texttt{CIEDE2000} permite cuantificar estas diferencias 
+cromáticas desde una perspectiva perceptual: valores superiores a 3 ya se consideran inaceptables 
+en aplicaciones de control de calidad, mientras que diferencias por encima de 10 indican una 
+discrepancia claramente notable para el observador humano \cite{luo2001ciede2000}. Esto se aprecia 
+en las imágenes obtenidas, donde a pesar de lograr colorear las regiones principales, los modelos 
+tienden a equivocarse en el tono o a producir colores más tenues de lo esperado.
+
+
 
 Los resultados muestran limitaciones claras:
 
@@ -53,20 +160,3 @@ Los resultados muestran limitaciones claras:
     \item El rendimiento global no alcanza niveles excelentes, aunque se observan diferencias entre las variantes de \texttt{UNet}.
     \item El número de pasos de difusión no resulta determinante en la calidad final.
 \end{itemize}
-
-Para la evaluación cuantitativa se emplearán las métricas \texttt{LPIPS} y \texttt{MSE}, cuyos valores aún no han sido calculados.
-
-\begin{table}[h]
-\centering
-\caption{Resultados cuantitativos preliminares de colorización con modelos de difusión (valores pendientes de cálculo).}
-\label{tab:diffusion_resultados}
-\begin{tabular}{lcc}
-\hline
-\textbf{Modelo} & \textbf{LPIPS} & \textbf{MSE} \\
-\hline
-UNet desde cero & -- & -- \\
-Fine-tuning último bloque & -- & -- \\
-LoRA sobre Stable Diffusion & -- & -- \\
-\hline
-\end{tabular}
-\end{table}
