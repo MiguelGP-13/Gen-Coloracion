@@ -102,10 +102,24 @@ pasos, ya no hay diferencia.
 
 El segundo es el \textbf{color scale}. Este hiperparámetro modifica cuanto cambia el color.
 Cuanto más grande el valor, más intenso será el color de la imagen. 
-Ha resultado ser mucho más importante el color scale en el resultado que el número de 
+Ha resultado ser más importante el color scale en el resultado que el número de 
 pasos. En nuestros experimentos, se ha definido 1.5 como el mejor color scale.
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/color_scale_comparacion.png}
+    \caption{Comparación hiperparámetros en imagen de coche}
+    \label{fig:Comparacion_coche}
+\end{figure}
+\FloatBarrier
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\linewidth]{images/color_scale_comparacion_perro.png}
+    \caption{Comparación hiperparámetros en imagen de un perro}
+    \label{fig:Comparacion_perro}
+\end{figure}
+\FloatBarrier
 
 \subsection{Resultados}
 
@@ -141,18 +155,19 @@ rendimiento del modelo, equilibrando precisión numérica, calidad perceptual y 
 \FloatBarrier
 
 Al analizar los resultados, se observa que los tres modelos mantienen la estructura global de 
-las imágenes sin deformaciones, como refleja el bajo valor de \texttt{LPIPS}. Sin embargo, en la 
-tarea de colorización los modelos presentan limitaciones, ya que los colores generados se alejan 
-de los tonos de referencia. La métrica \texttt{CIEDE2000} permite cuantificar estas diferencias 
-cromáticas desde una perspectiva perceptual: valores superiores a 3 ya se consideran inaceptables 
-en aplicaciones de control de calidad, mientras que diferencias por encima de 10 indican una 
-discrepancia claramente notable para el observador humano \cite{luo2001ciede2000}. Esto se aprecia 
-en las imágenes obtenidas, donde a pesar de lograr colorear las regiones principales, los modelos 
-tienden a equivocarse en el tono o a producir colores más tenues de lo esperado.
+las imágenes sin deformaciones, como refleja el bajo valor de \texttt{LPIPS}. No obstante, en la 
+tarea de colorización se evidencian limitaciones, ya que los colores generados difieren de los tonos 
+de referencia. La métrica \texttt{CIEDE2000} permite cuantificar estas diferencias cromáticas desde 
+una perspectiva perceptual: valores superiores a 3 ya se consideran inaceptables en aplicaciones de 
+control de calidad, mientras que diferencias por encima de 10 indican una discrepancia claramente 
+notable para el observador humano \cite{luo2001ciede2000}. En las imágenes obtenidas se aprecia que, 
+aunque los modelos logran colorear las regiones principales, tienden a equivocarse en el tono o a 
+producir colores más apagados de lo esperado. Entre las estrategias evaluadas, el \textit{fine-tuning} 
+del último bloque ofrece el peor desempeño, mientras que la variante LoRA consigue los mejores 
+resultados perceptuales.
 
 
-
-Los resultados muestran limitaciones claras:
+Los resultados muestran varias limitaciones claras:
 
 \begin{itemize}
     \item El modelo tiende a difuminar el texto presente en las imágenes.
@@ -160,3 +175,11 @@ Los resultados muestran limitaciones claras:
     \item El rendimiento global no alcanza niveles excelentes, aunque se observan diferencias entre las variantes de \texttt{UNet}.
     \item El número de pasos de difusión no resulta determinante en la calidad final.
 \end{itemize}
+
+No se ha logrado un modelo de difusión capaz de colorizar imagenes a un bune nivel.
+Los modelos del artículo Diffusing Colors \cite{Zabari2023Diffusing} logran mejores resultados 
+porque se apoyan en modelos de difusión previamente entrenados a gran escala, 
+integran prompts textuales para guiar la colorización y aprovechan datasets masivos y diversos.
+
+Viendo estas limitaciones, vamos a intentar atacar la única que podemos intentar 
+resolver, integran prompts textuales para guiar la colorización.
