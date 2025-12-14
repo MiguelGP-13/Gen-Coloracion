@@ -64,7 +64,24 @@ El modelo se entrenó sobre la partición de entrenamiento y se validó periódi
 Para evaluar el desempeño del modelo se definió un procedimiento de testeo que carga el modelo entrenado y la sección de los datos reservada para pruebas.  
 Los resultados se presentan en forma de tríos de imágenes: (imagen en gris, predicción generada, referencia real) acompañados del prompt textual.
 
-Los resultados muestran que el modelo es capaz de producir una coloración muy buena por regiones salvo en algunos casos concretos donde confunde los pétalos con hojas. Suponemos que debido a que las descripciones textuales contienen detalles sobre colores y partes de la flor, se logra que el modelo aplique los colores en las zonas adecuadas gracias a que la información del texto complementa la estructura visual.
+
+\begin{table}[H]
+\centering
+\caption{Métricas de evaluación de la colorización guiada por texto}
+\label{tab:text_guided_metrics}
+\vspace{0.2cm}
+\begin{tabular}{lc}
+\hline
+\textbf{Métrica} & \textbf{Text Guided} \\ \hline
+SSIM  & 0.8412 \\ 
+PSNR  & 21.7484 \\ 
+LPIPS & 0.1776  \\ \hline
+\end{tabular}
+\end{table}
+
+
+Los resultados de las imágenes muestran que el modelo es capaz de producir una coloración muy buena por regiones salvo en algunos casos concretos donde confunde los pétalos con hojas. Suponemos que debido a que las descripciones textuales contienen detalles sobre colores y partes de la flor, se logra que el modelo aplique los colores en las zonas adecuadas gracias a que la información del texto complementa la estructura visual.
+En cuanto a las métricas, el SSIM sugiere que el modelo ha preservado muy bien las características de la imagen, el PSNR a pesar de ser algo menor que en resto de modelos en otros campos, su valor sigue siendo bueno suponiendo un error de colorización de los píxeles bajo. 
 
 \begin{figure}[H]
     \centering
