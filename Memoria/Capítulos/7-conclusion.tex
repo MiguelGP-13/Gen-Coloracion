@@ -32,16 +32,20 @@ superando tanto a GAN como a modelos de difusión. Entre los VAE, el enfoque con
 a los AE en SSIM/MSE y también mantiene un CIEDE2000 bajo, mientras que el VAE denso queda descartado
 por su pobre desempeño.
 
-Las GAN ofrecen mayor saturación y continuidad de color a nivel visual, aunque sus métricas
-cuantitativas son inferiores a las de los AE y no disponen de CIEDE2000 en esta evaluación. Los modelos
+Las GAN ofrecen una mayor saturación y continuidad cromática a nivel visual, generando imágenes más vivas y con transiciones suaves. 
+No obstante, sus métricas cuantitativas siguen por detrás de las obtenidas por los autoencoders, tanto en coherencia estructural como en error numérico. 
+En términos de fidelidad cromática, se sitúan claramente por debajo de los AE pero por encima de los modelos de difusión, 
+lo que las posiciona como una alternativa equilibrada cuando se prioriza la naturalidad visual sin exigir la precisión cromática alcanzada por los autoencoders.
+
+Los modelos
 de difusión, pese a mejorar la similitud perceptual según LPIPS (especialmente con LoRA), muestran
 peores diferencias de color perceptuales (CIEDE2000 entre 11.8 y 13.8), indicando que aún no igualan la
 fidelidad cromática lograda por los autoencoders.
 
-En conjunto, los resultados señalan que los AE son el referente en estructura, fidelidad numérica y
-color (CIEDE2000), las GAN mejoran la naturalidad cromática de forma cualitativa, y los modelos de
-difusión destacan en LPIPS pero requieren integrar más contexto (semántico/textual) para cerrar la
-brecha en color. Es decir, requieren más entrenamiento.
+En conjunto, los resultados señalan que los AE son el referente en estructura, fidelidad numérica y 
+color (CIEDE2000). Las GAN mejoran la naturalidad cromática de forma cualitativa. Por último, los modelos de difusión 
+destacan en LPIPS pero necesitan integrar más contexto (semántico o textual) para cerrar la brecha en color. 
+En otras palabras, aún requieren un mayor grado de entrenamiento o condicionamiento para alcanzar la precisión cromática de los autoencoders.
 
 
 \subsection{Coloración guiada por texto}
