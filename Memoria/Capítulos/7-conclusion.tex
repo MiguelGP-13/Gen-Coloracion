@@ -1,4 +1,10 @@
 \section{Conclusión}
+En esta sección se presentan las conclusiones generales del trabajo, apoyadas en las métricas
+cuantitativas y cualitativas obtenidas para cada modelo de colorización. Los resultados permiten
+comparar de manera objetiva el rendimiento de arquitecturas basadas en autoencoders, variational
+autoencoders, redes generativas adversarias y modelos de difusión, destacando sus fortalezas y
+limitaciones en términos de estructura, fidelidad numérica y percepción visual.
+
 \begin{table}[htbp]
     \centering
     \caption{Comparación de métricas entre modelos de colorización}
@@ -18,3 +24,18 @@
     \end{tabular}
 \end{table}
 \FloatBarrier
+
+A partir de la comparación mostrada en la Tabla~\ref{tab:comparacion_modelos}, se observa que los
+autoencoders (U-Net y ResU-Net) ofrecen la mejor preservación estructural y menor error numérico,
+mientras que las GANs aportan mayor realismo visual y saturación cromática. Finalmente, los modelos
+de difusión, especialmente LoRA sobre Stable Diffusion, destacan en métricas perceptuales como LPIPS
+y CIEDE2000, lo que evidencia su potencial para aproximarse más a la percepción humana del color.
+En conjunto, los resultados confirman que cada enfoque aporta ventajas específicas y que la
+integración de técnicas multimodales constituye una línea prometedora para futuras investigaciones.
+
+
+
+\subsection{Colorización guiada por texto}
+
+La colorización guiada por texto ha demostrado ofrecer resultados muy sólidos cuando se dispone de imágenes acompañadas de descripciones ricas y precisas, como ocurre en el caso de las flores. Consideramos que esta estrategia podría extenderse a otros dominios donde la colorización sea relevante; sin embargo, la principal limitación reside en la disponibilidad de \textit{captions} de calidad, algo poco común en la mayoría de los datasets existentes.
+Pensamos que sería factible aproximarse a un colorizador más general para todos los usos si se adoptara un enfoque de entrenamiento similar al de modelos como CLIP, que aprovechan casi todas las imágenes que hay en Internet junto a su texto alternativo. No obstante, un esfuerzo de esta magnitud requeriría modelos de mayor capacidad y recursos computacionales sustancialmente superiores.
