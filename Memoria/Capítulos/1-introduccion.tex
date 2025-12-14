@@ -1,52 +1,11 @@
 \section{Introducción}
+En este proyecto vamos a abordar el problema de la colorización automática de imágenes en blanco y negro. Esta tarea consiste en inferir la información cromática que no está presente en la imagen original, esto hace que sea un problema inherentemente ambiguo ya que para una misma imagen puede haber varias colorizaciones que sean creíbles y coherentes. El objetivo no es únicamente generar imágenes visualmente atractivas, sino que estos resultados tambien sean coherentes con la estructura y el contenido semántico de la imagen, evitando inconsistencias y artefactos perceptuales.
+Para este proyecto hemos explorado diferentes enfoques, desde \textbf{Autoencoders} y \textbf{Variational Autoencoders}, que aprenden a comprimir y reconstruir imágenes en espacios latentes, hasta \textbf{redes UNet}, que aprovechan las skip conexions para preservar los detalles espaciales durante la reconstrucción.
 
-La coloración automática de imágenes en escala de grises ha sido un reto clásico 
-en el campo de la visión por computador y el procesamiento digital de imágenes. 
-Desde sus primeras aplicaciones en la restauración, este problema plantea una 
-dificultad fundamental: reconstruir información cromática que no está presente 
-en los datos originales. La tarea no consiste únicamente en añadir color de manera 
-arbitraria, sino en generar tonalidades plausibles y coherentes con la semántica 
-de la escena, preservando al mismo tiempo la estructura y los detalles de la imagen.
+Por otro lado, las \textbf{Generative Adversarial Networks GAN} han demostrado un gran potencial para generar colorizaciones realistas, gracias a la dinámica competitiva entre generador y discriminador. En colorización, las GAN permiten producir colores más vivos y naturales, aunque a menudo suponen un entrenamiento más inestable. Más recientemente, los \textbf{modelos de difusión} han surgido como una alternativa poderosa, ya que son capaces de generar imágenes de alta calidad mediante un proceso iterativo refinando el ruido hacia imágenes de buena calidad. Estos modelos, al operar en espacios latentes comprimidos por un VAE, han mostrado lograr muy buenos resultados en tareas como la colorización.
 
-Con el auge del aprendizaje profundo, la coloración ha experimentado un avance 
-significativo. Las arquitecturas modernas permiten aprender representaciones 
-latentes que capturan tanto la estructura como la distribución cromática de los 
-datos, ofreciendo resultados mucho más realistas que los métodos tradicionales 
-basados en reglas o en interpolación manual. En este contexto, diferentes enfoques 
-han sido explorados: desde \textbf{Autoencoders (AE)} y \textbf{Variational Autoencoders (VAE)}, 
-que aprenden a comprimir y reconstruir imágenes en espacios latentes, hasta 
-\textbf{redes UNet}, que aprovechan conexiones de salto para preservar detalles 
-espaciales durante la reconstrucción.
+Otro aspecto adicional que también ha cobrado relevancia es el \textbf{condicionamiento mediante texto}. La posibilidad de guiar el proceso de colorización con descripciones abre la puerta a aplicaciones creativas y personalizadas, donde el usuario puede especificar los estilos, paletas cromáticas o incluso contextos narrativos.
 
-Por otro lado, las \textbf{Generative Adversarial Networks (GAN)} han demostrado un 
-gran potencial en la generación de imágenes fotorrealistas, gracias a la dinámica 
-competitiva entre generador y discriminador. En coloración, las GAN permiten 
-producir colores más vivos y naturales, aunque a menudo requieren un entrenamiento 
-cuidadoso para evitar inestabilidades. Más recientemente, los \textbf{modelos de difusión} 
-han emergido como una alternativa poderosa, capaces de generar imágenes de alta calidad 
-mediante un proceso iterativo de refinamiento desde ruido hacia datos estructurados. 
-Estos modelos, al operar en espacios latentes comprimidos por un VAE, han mostrado 
-resultados sobresalientes en tareas de síntesis y edición de imágenes, incluyendo la coloración.
+Vamos a hacer un análisis comparativo sobre los resultados de estas arquitecturas de colorización de imágenes, para ello hemos utilizado como base el dataset \textbf{STL-10}, bastante utilizado para clasificación con imágenes de animales y vehículos, y además un dataset complementario de flores con descripciones textuales para el enfoque guiado por texto. También probaremos el efecto que puede tener aplicar a las imágenes \textbf{segmentación previa a la colorización}, para comprobar si puede mejorar la coherencia de los resultados al proporcionar información estructural sobre los objetos presentes en la escena.
 
-Un aspecto adicional que ha cobrado relevancia es el \textbf{condicionamiento mediante texto}. 
-La posibilidad de guiar el proceso de coloración con descripciones lingüísticas 
-abre la puerta a aplicaciones creativas y personalizadas, donde el usuario puede 
-especificar estilos, paletas cromáticas o incluso contextos narrativos. Aunque este 
-enfoque introduce complejidad adicional, también amplía el rango de control sobre el 
-resultado final.
 
-En este trabajo se presenta un análisis comparativo de estas arquitecturas aplicadas 
-a la coloración de imágenes, utilizando como base el conjunto de datos \textbf{STL-10}, 
-ampliamente empleado en tareas de clasificación y representación visual, y un dataset 
-complementario de flores, que aporta diversidad cromática y riqueza semántica. 
-Además, se explora la hipótesis de que una \textbf{segmentación previa a la coloración} 
-puede mejorar la coherencia de los resultados, al proporcionar información estructural más 
-precisa sobre los objetos presentes en la escena.
-
-La introducción de este estudio busca situar la coloración automática dentro del 
-panorama actual de la inteligencia artificial aplicada a la visión por computador, 
-destacando tanto su relevancia práctica como su interés científico. A través de la 
-comparación de AE, VAE, UNet, GAN, modelos de difusión y enfoques guiados por texto, 
-junto con la incorporación de segmentación como paso previo, se pretende ofrecer una 
-visión integral de las técnicas más representativas y de su impacto en la calidad 
-perceptual de las imágenes generadas.
