@@ -1,54 +1,50 @@
 \section{Conclusiones}
 En esta sección se presentan las conclusiones generales del trabajo, apoyadas en las métricas
-cuantitativas y cualitativas obtenidas para cada modelo de colorización. Los resultados permiten
+cuantitativas y cualitativas obtenidas para cada modelo de coloración. Los resultados permiten
 comparar de manera objetiva el rendimiento de arquitecturas basadas en autoencoders, variational
 autoencoders, redes generativas adversarias y modelos de difusión, destacando sus fortalezas y
-limitaciones en términos de estructura, fidelidad numérica y percepción visual.
+limitaciones en términos de estructura, fidelidad numérica, percepción visual y fidelidad cromática.
 
 \begin{table}[htbp]
     \centering
-    \caption{Comparación de métricas entre modelos de colorización}
+    \caption{Comparación de métricas entre modelos de coloración}
     \label{tab:comparacion_modelos}
     \begin{tabular}{lcccc}
         \hline
         \textbf{Modelo}       & \textbf{SSIM} $\uparrow$ & \textbf{LPIPS} $\downarrow$ & \textbf{MSE} $\downarrow$ & \textbf{CIEDE2000} $\downarrow$ \\ \hline
-        U-Net (AE)            & 0.9323                   & 0.1345                      & \textbf{190.6}            & 8.76                            \\
-        ResU-Net (AE)         & \textbf{0.9360}          & 0.1466                      & 203.7                     & 8.89                            \\
-        VAE Denso             & 0.0600                   & 0.6884                      & 15103.6                   & --                              \\
-        VAE Convolucional     & 0.9338                   & 0.1485                      & 200.5                     & 8.84                            \\
-        GAN clásica           & 0.9097                   & 0.1628                      & 278.7                     & --                              \\
-        GAN + Segmentación    & 0.9073                   & 0.1660                      & 297.9                     & --                              \\
-        Diffusion UNet        & 0.9152                   & 0.1437                      & 461.3                     & 11.86                           \\
-        Diffusion Fine-tuning & 0.8636                   & 0.1416                      & 554.0                     & 13.76                           \\
-        LoRA Stable Diffusion & 0.9034                   & \textbf{0.1322}             & 499.1                     & \textbf{11.77}                  \\ \hline
+        U-Net (AE)            & 0.9323                   & 0.1345                      & \textbf{190.6}            & \textbf{8.76}                    \\
+        ResU-Net (AE)         & \textbf{0.9360}          & 0.1466                      & 203.7                     & 8.89                              \\
+        VAE Denso             & 0.0600                   & 0.6884                      & 15103.6                   & --                                \\
+        VAE Convolucional     & 0.9338                   & 0.1485                      & 200.5                     & 8.84                              \\
+        GAN clásica           & 0.9097                   & 0.1628                      & 278.7                     & --                                \\
+        GAN + Segmentación    & 0.9073                   & 0.1660                      & 297.9                     & --                                \\
+        Diffusion UNet        & 0.9152                   & 0.1437                      & 461.3                     & 11.86                             \\
+        Diffusion Fine-tuning & 0.8636                   & 0.1416                      & 554.0                     & 13.76                             \\
+        LoRA Stable Diffusion & 0.9034                   & \textbf{0.1322}             & 499.1                     & 11.77                             \\ \hline
     \end{tabular}
 \end{table}
 \FloatBarrier
 
-El análisis de la Tabla~\ref{tab:comparacion_modelos} permite extraer varias conclusiones relevantes.
-En primer lugar, los autoencoders (U-Net y ResU-Net) destacan por su elevada coherencia estructural
-(SSIM) y por presentar los menores valores de error numérico (MSE), lo que los convierte en modelos
-muy fiables desde el punto de vista de la reconstrucción objetiva. En contraste, los variational
-autoencoders muestran un rendimiento dispar: mientras el VAE convolucional se aproxima a los AE en
-métricas, el VAE denso queda claramente descartado por su baja calidad.
+El análisis de la Tabla~\ref{tab:comparacion_modelos} muestra que los autoencoders (U-Net y ResU-Net)
+son los más consistentes en métricas objetivas: presentan la mayor coherencia estructural (SSIM),
+los menores errores numéricos (MSE) y, crucialmente, la mejor fidelidad cromática (CIEDE2000 $\approx$ 8.8),
+superando tanto a GAN como a modelos de difusión. Entre los VAE, el enfoque convolucional se aproxima
+a los AE en SSIM/MSE y también mantiene un CIEDE2000 bajo, mientras que el VAE denso queda descartado
+por su pobre desempeño.
 
-Las redes generativas adversarias (GAN) aportan un mayor realismo visual y saturación cromática,
-aunque sus métricas objetivas son algo inferiores a las de los AE. La incorporación de segmentación
-mejora la coherencia perceptual del color, aunque no se refleja en SSIM ni MSE. Finalmente, los
-modelos de difusión muestran un comportamiento diferente: aunque presentan errores numéricos más
-altos, el enfoque LoRA sobre Stable Diffusion logra los mejores resultados en métricas perceptuales
-(LPIPS y CIEDE2000), lo que evidencia su capacidad para aproximarse mejor a la percepción humana del
-color.
+Las GAN ofrecen mayor saturación y continuidad de color a nivel visual, aunque sus métricas
+cuantitativas son inferiores a las de los AE y no disponen de CIEDE2000 en esta evaluación. Los modelos
+de difusión, pese a mejorar la similitud perceptual según LPIPS (especialmente con LoRA), muestran
+peores diferencias de color perceptuales (CIEDE2000 entre 11.8 y 13.8), indicando que aún no igualan la
+fidelidad cromática lograda por los autoencoders.
 
-En conjunto, los resultados confirman que cada enfoque aporta ventajas específicas: los AE son
-sólidos en fidelidad estructural, las GANs mejoran la naturalidad cromática y los modelos de difusión
-destacan en percepción visual. Por tanto, la integración de técnicas multimodales y el uso de
-información semántica o textual se perfilan como líneas prometedoras para futuras investigaciones en
-colorización automática de imágenes.
+En conjunto, los resultados señalan que los AE son el referente en estructura, fidelidad numérica y
+color (CIEDE2000), las GAN mejoran la naturalidad cromática de forma cualitativa, y los modelos de
+difusión destacan en LPIPS pero requieren integrar más contexto (semántico/textual) para cerrar la
+brecha en color. Es decir, requieren más entrenamiento.
 
 
+\subsection{Coloración guiada por texto}
 
-\subsection{Colorización guiada por texto}
-
-La colorización guiada por texto ha demostrado ofrecer resultados muy sólidos cuando se dispone de imágenes acompañadas de descripciones ricas y precisas, como ocurre en el caso de las flores. Consideramos que esta estrategia podría extenderse a otros dominios donde la colorización sea relevante; sin embargo, la principal limitación reside en la disponibilidad de \textit{captions} de calidad, algo poco común en la mayoría de los datasets existentes.
+La coloración guiada por texto ha demostrado ofrecer resultados muy sólidos cuando se dispone de imágenes acompañadas de descripciones ricas y precisas, como ocurre en el caso de las flores. Consideramos que esta estrategia podría extenderse a otros dominios donde la coloración sea relevante; sin embargo, la principal limitación reside en la disponibilidad de \textit{captions} de calidad, algo poco común en la mayoría de los datasets existentes.
 Pensamos que sería factible aproximarse a un colorizador más general para todos los usos si se adoptara un enfoque de entrenamiento similar al de modelos como CLIP, que aprovechan casi todas las imágenes que hay en Internet junto a su texto alternativo. No obstante, un esfuerzo de esta magnitud requeriría modelos de mayor capacidad y recursos computacionales sustancialmente superiores.

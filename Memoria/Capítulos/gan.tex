@@ -1,12 +1,12 @@
-\section{GAN para Colorización}
+\section{GAN para coloración}
 
-Tras evaluar modelos deterministas como autoencoders y VAEs, ahora vamos a explorar un enfoque basado en redes GAN para la colorización. Las GAN son especialmente adecuadas para esta tarea porque incorporan un discriminador que empuja al generador a producir colores más realistas y coherentes, incluso en zonas donde la elección del color es más ambigua. Esto suele traducirse en imágenes más saturadas, con transiciones suaves y menos aspecto borroso que en los métodos puramente reconstrucción.
+Tras evaluar modelos deterministas como autoencoders y VAEs, ahora vamos a explorar un enfoque basado en redes GAN para la coloración. Las GAN son especialmente adecuadas para esta tarea porque incorporan un discriminador que empuja al generador a producir colores más realistas y coherentes, incluso en zonas donde la elección del color es más ambigua. Esto suele traducirse en imágenes más saturadas, con transiciones suaves y menos aspecto borroso que en los métodos puramente reconstrucción.
 
-Nuestro modelo sigue la filosofía de \textit{pix2pix}\cite{isola2017pix2pix}, formulando la colorización como un problema de \textit{image-to-image translation}: dado el canal L de luminancia de una imagen en espacio Lab, el objetivo es predecir los canales a y b que contienen la información cromática.
+Nuestro modelo sigue la filosofía de \textit{pix2pix}\cite{isola2017pix2pix}, formulando la coloración como un problema de \textit{image-to-image translation}: dado el canal L de luminancia de una imagen en espacio Lab, el objetivo es predecir los canales a y b que contienen la información cromática.
 
 \subsection{Arquitectura del Generador U-Net}
 
-Para el generador empleamos una U-Net \cite{ronneberger2015unet}, debido a su capacidad para preservar la información espacial de la imagen gracias a sus skip conexions entre encoder y decoder. En colorización esto es crucial porque aunque el color pueda variar, los bordes, contornos y texturas deben mantenerse.
+Para el generador empleamos una U-Net \cite{ronneberger2015unet}, debido a su capacidad para preservar la información espacial de la imagen gracias a sus skip conexions entre encoder y decoder. En coloración esto es crucial porque aunque el color pueda variar, los bordes, contornos y texturas deben mantenerse.
 
 \begin{figure}[H]
 \centering
@@ -27,7 +27,7 @@ El generador recibe como entrada un tensor de dimensiones $(128\times128\times1)
     \item \textbf{Salida}: una convolución transpuesta adicional produce una imagen $(128\times128\times2)$ con activación \textit{tanh}, que corresponde a los canales a y b normalizados [-1,1].
 \end{itemize}
 
-En conjunto, la U-Net hace que las colorizaciones sean más nítidas, evitando que la red rellene grandes áreas con colores uniformes o poco detallados.
+En conjunto, la U-Net hace que las coloraciones sean más nítidas, evitando que la red rellene grandes áreas con colores uniformes o poco detallados.
 
 \subsection{Arquitectura del Discriminador PatchGAN}
 
@@ -113,7 +113,7 @@ LPIPS & 0.1628 \\ \hline
 
 Las métricas reflejan que el modelo es capaz de preservar adecuadamente la estructura global de la imagen 
 (SSIM = 0.91), aunque todavía existe un error de reconstrucción apreciable (PSNR = 23.7),
-como es de esperar por la dificultad inherente de la colorización. El valor de LPIPS ($0.1628$) indica que,
+como es de esperar por la dificultad inherente de la coloración. El valor de LPIPS ($0.1628$) indica que,
 a nivel perceptual, las predicciones son razonablemente cercanas a las imágenes reales,
 pero aún presentan errores en la coloración de zonas más ambiguas.
 
@@ -137,7 +137,7 @@ comparando las imágenes originales en escala de grises con las generadas y la o
 
 Como podemos ver con las GAN, las imágenes resultantes tienen colores más saturados y con mejor continuidad que con los autoencoders y VAEs, especialmente si son objetos con bordes bien definidos o texturas sencillas.
 
-Aún asi el modelo sigue mostrando ciertas ambigüedades en regiones donde el color real no está bien determinado, lo cual es esperable en colorización.
+Aún asi el modelo sigue mostrando ciertas ambigüedades en regiones donde el color real no está bien determinado, lo cual es esperable en coloración.
 
 \section{GAN Guiada por Segmentación}
 
@@ -287,7 +287,7 @@ A nivel cualitativo, destacamos los siguientes efectos positivos derivados de la
 
 Aunque las métricas muestran un rendimiento similar al de la GAN sin segmentación, el análisis visual 
 revela mejoras en la coherencia del color. En los ejemplos del conjunto de test, se aprecia cómo la segmentación guía al generador 
-a producir colorizaciones más consistentes con el contenido semántico de la imagen.
+a producir coloraciones más consistentes con el contenido semántico de la imagen.
 
 No obstante, también observamos que cuando la segmentación de SegFormer es incorrecta, 
 el generador puede reproducir errores similares a los de la GAN clásica o incluso colorear regiones de un color que no les corresponde, por ejemplo, colorear la tierra como si fuera césped. Aun así, el modelo se 
@@ -297,4 +297,4 @@ incluso teniendo ruido semántico.
 En conjunto, aunque las métricas cuantitativas no mejoran de forma sustancial, la calidad 
 perceptual sí lo hace ligeramente, especialmente en escenas donde la semántica es determinante para la elección 
 del color. Cabe destacar que una de las posibles razones por las que la incorporación de segmentación no produce una mejora significativa es la baja resolución de las imágenes del dataset. 
-Al trabajar con imágenes de $128 \times 128$ píxeles, las máscaras generadas tienden a ser poco precisas en regiones pequeñas, lo que hace que el generador no reciba información semántica relevante. En estos casos, la segmentación no introduce un contexto semántico suficientemente rico como para influir de manera notable en el proceso de colorización.
+Al trabajar con imágenes de $128 \times 128$ píxeles, las máscaras generadas tienden a ser poco precisas en regiones pequeñas, lo que hace que el generador no reciba información semántica relevante. En estos casos, la segmentación no introduce un contexto semántico suficientemente rico como para influir de manera notable en el proceso de coloración.

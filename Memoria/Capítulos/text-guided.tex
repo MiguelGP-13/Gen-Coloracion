@@ -1,4 +1,4 @@
-\section{Colorización Guiada por Texto}
+\section{Coloración Guiada por Texto}
 
 El objetivo es desarrollar un modelo capaz de colorear imágenes utilizando como guía una descripción textual. La idea central es que la red no solo aprenda a reconstruir colores, sino que además incorpore información semántica explícita presente en el texto (por ejemplo: ``pétalos rojos'', ``centro amarillo'', etc.).
 
@@ -7,7 +7,7 @@ Se intentaron dos estrategias para suplir esta ausencia:
 
 \begin{enumerate}
     \item \textbf{Generar descripciones automáticamente mediante un captioner preentrenado.} \\
-    Resultó poco útil porque al trabajar con imágenes en escala de grises, el captioner no disponía de pistas sobre los colores reales y la información que producía era demasiado general, no aportaba señales relevantes al proceso de colorización que no entendiera ya el propio AE colorizador ya que no mencionaba nada sobre colores. Además, era más costoso de ejecutar por que requería modelo pesado durante la preparación del dataset para generar los textos, ralentizando el flujo de trabajo.
+    Resultó poco útil porque al trabajar con imágenes en escala de grises, el captioner no disponía de pistas sobre los colores reales y la información que producía era demasiado general, no aportaba señales relevantes al proceso de coloración que no entendiera ya el propio AE colorizador ya que no mencionaba nada sobre colores. Además, era más costoso de ejecutar por que requería modelo pesado durante la preparación del dataset para generar los textos, ralentizando el flujo de trabajo.
 
     \item \textbf{Clasificar cada imagen según su color dominante.} \\
     Este método tampoco funcionó: muchas imágenes contenían varios colores relevantes, o el color dominante procedía del fondo en vez del objeto de interés. Esto generaba etiquetas incorrectas además de promts muy simples (nombres de los colores mayoritarios exclusivamente) que luego en la inferencía no serían iguales y hacía que el modelo no mejorase respecto al autoencoder base.
@@ -16,7 +16,7 @@ Se intentaron dos estrategias para suplir esta ausencia:
 Tras comprobar que ninguno de estos dos enfoques producía beneficios reales, decidimos recurrir a un dataset ya anotado con descripciones ricas y con referencias explícitas a colores.
 
 \subsection{Dataset empleado}
-Seleccionamos el dataset \texttt{Oxford Flowers102}, que incluye para cada imagen de la flor correspondiente, una descripción textual detallada. Estas descripciones suelen mencionar explícitamente los colores de los pétalos, hojas o centros, lo cual resulta ideal para un modelo de colorización guiada.
+Seleccionamos el dataset \texttt{Oxford Flowers102}, que incluye para cada imagen de la flor correspondiente, una descripción textual detallada. Estas descripciones suelen mencionar explícitamente los colores de los pétalos, hojas o centros, lo cual resulta ideal para un modelo de coloración guiada.
 
 Para asegurar que el texto proporcionado realmente aportaba información cromática, construimos una lista de palabras relacionadas con colores (alrededor de 40 términos, incluyendo principalmente nombres de colores y tonalidades) y solo se conservaron aquellas imágenes cuyo texto contenía al menos una palabra de la lista. Con esto garantizamos que el modelo recibe mensajes relevantes sobre el color que queremos obtener.
 
@@ -56,7 +56,7 @@ El condicionamiento se aplica por primera vez en el bottleneck, donde se control
 
 Durante el proceso de entrenamiento se utilizó una función personalizada \texttt{collate\_fn} para garantizar que cada imagen queda alineada con su descripción textual antes de introducirse en el modelo. 
 
-Para la etapa de aprendizaje se empleó \textbf{MSE (Mean Squared Error)} como función de pérdida, comparando píxel a píxel la imagen generada con la imagen real. Para tarea de colorización resulta ser de las más útiles ya que consiste en aproximar colores continuos.  
+Para la etapa de aprendizaje se empleó \textbf{MSE (Mean Squared Error)} como función de pérdida, comparando píxel a píxel la imagen generada con la imagen real. Para tarea de coloración resulta ser de las más útiles ya que consiste en aproximar colores continuos.  
 El modelo se entrenó sobre la partición de entrenamiento y se validó periódicamente para monitorizar su rendimiento.
 
 \subsection{Resultados}
@@ -64,28 +64,28 @@ El modelo se entrenó sobre la partición de entrenamiento y se validó periódi
 Para evaluar el desempeño del modelo se definió un procedimiento de testeo que carga el modelo entrenado y la sección de los datos reservada para pruebas.  
 Los resultados se presentan en forma de tríos de imágenes: (imagen en gris, predicción generada, referencia real) acompañados del prompt textual.
 
-Los resultados muestran que el modelo es capaz de producir una colorización muy buena por regiones salvo en algunos casos concretos donde confunde los pétalos con hojas. Suponemos que debido a que las descripciones textuales contienen detalles sobre colores y partes de la flor, se logra que el modelo aplique los colores en las zonas adecuadas gracias a que la información del texto complementa la estructura visual.
+Los resultados muestran que el modelo es capaz de producir una coloración muy buena por regiones salvo en algunos casos concretos donde confunde los pétalos con hojas. Suponemos que debido a que las descripciones textuales contienen detalles sobre colores y partes de la flor, se logra que el modelo aplique los colores en las zonas adecuadas gracias a que la información del texto complementa la estructura visual.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{images/text-guided-1.png}
-    \caption{Ejemplo de resultado de colorización guiada por texto (1).}
+    \caption{Ejemplo de resultado de coloración guiada por texto (1).}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{images/text-guided-2.png}
-    \caption{Ejemplo de resultado de colorización guiada por texto (2).}
+    \caption{Ejemplo de resultado de coloración guiada por texto (2).}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{images/text-guided-3.png}
-    \caption{Ejemplo de resultado de colorización guiada por texto (3).}
+    \caption{Ejemplo de resultado de coloración guiada por texto (3).}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{images/text-guided-4.png}
-    \caption{Ejemplo de resultado de colorización guiada por texto (4).}
+    \caption{Ejemplo de resultado de coloración guiada por texto (4).}
 \end{figure}

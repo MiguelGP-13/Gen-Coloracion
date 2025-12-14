@@ -1,11 +1,11 @@
 \section{Estudio del Estado del Arte}
-Los avances recientes en colorización automática de imágenes se estructuran en diversas familias metodológicas que definen el estado del arte en esta área. En primer lugar, los métodos basados en redes convolucionales continúan siendo un pilar fundamental dentro del aprendizaje profundo. Estas aproximaciones suelen apoyarse en variantes refinadas de arquitecturas tipo U-Net, donde se integran convoluciones dilatadas, técnicas de normalización y diversas modificaciones estructurales destinadas a mejorar la preservación del detalle y la coherencia espacial.
+Los avances recientes en coloración automática de imágenes se estructuran en diversas familias metodológicas que definen el estado del arte en esta área. En primer lugar, los métodos basados en redes convolucionales continúan siendo un pilar fundamental dentro del aprendizaje profundo. Estas aproximaciones suelen apoyarse en variantes refinadas de arquitecturas tipo U-Net, donde se integran convoluciones dilatadas, técnicas de normalización y diversas modificaciones estructurales destinadas a mejorar la preservación del detalle y la coherencia espacial.
 
 En paralelo, los modelos sustentados en mecanismos de atención y arquitecturas Transformer han experimentado un crecimiento notable, impulsados por su capacidad para modelar dependencias de largo alcance entre regiones distantes de la imagen. Esta propiedad se traduce habitualmente en una mayor consistencia cromática y semántica, especialmente en escenas complejas donde la comprensión global del contexto resulta determinante.
 
-Otra línea destacada la constituyen los métodos basados en redes GAN, junto con las variantes híbridas que combinan GANs y módulos de atención. Estos sistemas han demostrado una capacidad superior para producir colorizaciones naturales y vívidas, mitigando problemas habituales como la desaturación cromática.
+Otra línea destacada la constituyen los métodos basados en redes GAN, junto con las variantes híbridas que combinan GANs y módulos de atención. Estos sistemas han demostrado una capacidad superior para producir coloraciones naturales y vívidas, mitigando problemas habituales como la desaturación cromática.
 
-Asimismo, las arquitecturas híbridas con \textit{dual-decoder} representan una contribución relevante al buscar un equilibrio óptimo entre fidelidad local y coherencia global. Este tipo de diseños permite reducir artefactos característicos del proceso de colorización, como el \textit{color bleeding}, al separar explícitamente la reconstrucción estructural del razonamiento semántico.
+Asimismo, las arquitecturas híbridas con \textit{dual-decoder} representan una contribución relevante al buscar un equilibrio óptimo entre fidelidad local y coherencia global. Este tipo de diseños permite reducir artefactos característicos del proceso de coloración, como el \textit{color bleeding}, al separar explícitamente la reconstrucción estructural del razonamiento semántico.
 
 De forma complementaria, los estudios de carácter \textit{survey} y los trabajos de \textit{benchmarking} publicados en los últimos años proporcionan una visión integradora del campo. Estos análisis comparativos revisan las limitaciones de los conjuntos de datos disponibles, evidencian la presencia de sesgos cromáticos y discuten la necesidad de métricas más representativas para evaluar adecuadamente la naturalidad, la coherencia semántica y la diversidad cromática de los modelos actuales.
 
@@ -16,12 +16,12 @@ Entre los modelos contemporáneos más representativos destaca DDColor, consider
 \item Color Decoder (Semántico): Basado en tecnología Transformer y \textit{Color Queries}, permitiendo asignar colores coherentes y vibrantes en función del contenido semántico, sin comprometer los límites estructurales.
 \end{itemize}
 
-La combinación de ambas ramas permite obtener colorizaciones altamente detalladas y cromáticamente realistas, superando a numerosos métodos previos basados exclusivamente en GANs \cite{Kang_2023_ICCV}.
+La combinación de ambas ramas permite obtener coloraciones altamente detalladas y cromáticamente realistas, superando a numerosos métodos previos basados exclusivamente en GANs \cite{Kang_2023_ICCV}.
 
 Si el objetivo es maximizar el realismo visual, uno de los modelos más avanzados es CtrlColor, basado en técnicas de difusión. Este método mejora significativamente las limitaciones presentes en trabajos previos, especialmente en relación con el \textit{color bleeding}. Su principal aportación consiste en un marco unificado que integra tres modos de operación dentro de una única red, sin necesidad de reentrenamiento:
 
 \begin{itemize}
-\item Incondicional: Permite la colorización automática al estilo de DDColor.
+\item Incondicional: Permite la coloración automática al estilo de DDColor.
 \item Guiado por texto: Utiliza prompts para orientar la paleta cromática.
 \item Guiado por trazos: El usuario puede especificar trazos de color, que el modelo propaga respetando la estructura geométrica de la imagen.
 \end{itemize}

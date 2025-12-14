@@ -120,7 +120,7 @@ Este modelo implementa un Autoencoder Variacional que mantiene la topología 2D 
 
 \end{itemize}
 \subsection{Justificación de modelos}
-Estos modelos se implementan para abordar la ambigüedad intrínseca de la colorización porque un objeto gris puede tener múltiples colores válidos.
+Estos modelos se implementan para abordar la ambigüedad intrínseca de la coloración porque un objeto gris puede tener múltiples colores válidos.
 
 Mientras que los modelos deterministas tienden a promediar colores generando tonos apagados ante la duda, los VAEs aprenden una distribución de probabilidad, permitiendo generar colores más vivos y diversos.
 
@@ -165,7 +165,7 @@ La comparación cuantitativa evidencia una diferencia abismal en el rendimiento 
 
 Los valores obtenidos (SSIM: 0.06, PSNR: 6.34) indican un colapso estructural casi total del VAE Denso. Al aplanar los mapas de características y utilizar capas densas, el modelo pierde la correlación espacial de los píxeles, resultando en una salida que no logra reconstruir ni siquiera la forma de los objetos, comportándose prácticamente como ruido aleatorio.
 
-Por el contrario, el modelo totalmente convolucional alcanza un SSIM de 0.9338, situándose al mismo nivel de calidad que los modelos autoencoder. Esto demuestra que mantener la topología 2D en el cuello de botella es un requisito indispensable para la colorización.
+Por el contrario, el modelo totalmente convolucional alcanza un SSIM de 0.9338, situándose al mismo nivel de calidad que los modelos autoencoder. Esto demuestra que mantener la topología 2D en el cuello de botella es un requisito indispensable para la coloración.
 
 La métrica perceptual confirma lo anterior (LPIPS): el VAE Denso (0.6884) genera imágenes irreconocibles para el ojo humano, mientras que el CVAE (0.1485) produce resultados coherentes y naturales.
 
@@ -185,7 +185,7 @@ Con una inspección visual observamos reflejados los resultados obtenidos cuanti
     \label{fig:placeholder}
 \end{figure}
 
-Observamos una imagen muy borrosa del primer VAE indicando que no ha sido capaz de reconstruir la imagen. Con el segundo VAE sí tenemos una reconstrucción óptima de la imagen pero la colorización no es correcta.
+Observamos una imagen muy borrosa del primer VAE indicando que no ha sido capaz de reconstruir la imagen. Con el segundo VAE sí tenemos una reconstrucción óptima de la imagen pero la coloración no es correcta.
 
 \subsection{Conclusiones}
 La experimentación con modelos variacionales evidencia que la preservación de la topología en el espacio latente es un requisito indispensable, habiendo logrado el VAE convolucional rescatar la coherencia estructural tras el colapso del enfoque denso. Sin embargo, pese a esta validación arquitectónica, es necesario señalar que los resultados visuales finales no logran superar la calidad obtenida por los autoencoders. La restricción de regularización impuesta por la Divergencia KL, sumada a la optimización de pérdidas píxel a píxel, tiende a producir imágenes con texturas suavizadas y menor definición cromática. Esta limitación perceptiva justifica el siguiente paso en la investigación: la transición hacia las Redes GAN, cuyo mecanismo de discriminación busca romper precisamente esta barrera de borrosidad para forzar la generación de detalles de alta frecuencia y un realismo visual superior.

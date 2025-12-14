@@ -1,4 +1,4 @@
-\section{Colorización con modelos de difusión}
+\section{Coloración con modelos de difusión}
 
 Los modelos de difusión se han consolidado como una de las técnicas más potentes en generación de imágenes. Su principio básico consiste en transformar ruido gaussiano en datos estructurados mediante un proceso iterativo de denoising. Formalmente, el proceso directo añade ruido a una imagen $x_0$ siguiendo una cadena de Markov:
 
@@ -11,7 +11,7 @@ Los modelos de difusión se han consolidado como una de las técnicas más poten
 
 
 donde $\beta_t$ controla la cantidad de ruido en el paso $t$. El modelo aprende la distribución inversa $p_\theta(x_{t-1} \mid x_t)$ para recuperar la señal original. Tras suficientes iteraciones, se obtiene una imagen coherente a partir de ruido inicial. Estos métodos han demostrado gran capacidad en tareas de síntesis y edición de imágenes \cite{Zabari2023Diffusing}.
-En el contexto de la colorización, los modelos de difusión resultan útiles porque permiten generar detalles cromáticos plausibles a partir de información parcial (imágenes en escala de grises), preservando bordes y texturas.
+En el contexto de la coloración, los modelos de difusión resultan útiles porque permiten generar detalles cromáticos plausibles a partir de información parcial (imágenes en escala de grises), preservando bordes y texturas.
 
 \subsection{Arquitectura}
 
@@ -24,7 +24,7 @@ parámetros de manera aleatoria. La arquitectura utilizada incluye tres bloques 
 tres ascendentes, con mecanismos de atención en el nivel intermedio. Todos los parámetros del
 modelo fueron entrenados, lo que permite un control completo sobre el proceso de aprendizaje.
 Este modelo, pese a ser más pequeño y por lo tanto con menor capacidad, aprende directamente
-la tarea de colorización, especializandose desde el inicio.
+la tarea de coloración, especializandose desde el inicio.
 
 \subsubsection{Fine-tuning del UNet de Stable Diffusion}
 
@@ -32,7 +32,7 @@ En este caso se partió del \texttt{UNet} preentrenado de \textit{Stable Diffusi
 el ajuste únicamente al tercer bloque ascendente y al bloque intermedio. El resto de parámetros
 se mantuvieron congelados, de modo que sólo estas capas fueron entrenadas. Esta estrategia reduce
 el coste computacional y el riesgo de sobreajuste, aprovechando el conocimiento previo del modelo
-y adaptándolo específicamente a la tarea de colorización.Por otro lado, esta estrategia es la más costosa computacionalmente
+y adaptándolo específicamente a la tarea de coloración.Por otro lado, esta estrategia es la más costosa computacionalmente
 
 \subsubsection{Adaptación mediante LoRA}
 
@@ -123,7 +123,7 @@ pasos. En nuestros experimentos, se ha definido 1.5 como el mejor color scale.
 
 \subsection{Resultados}
 
-Para la evaluación cuantitativa de la colorización de imágenes se han considerado tres métricas
+Para la evaluación cuantitativa de la coloración de imágenes se han considerado tres métricas
 complementarias. La métrica \texttt{LPIPS} (\textit{Learned Perceptual Image Patch Similarity})
 se apoya en redes neuronales preentrenadas para estimar la similitud perceptual entre la imagen
 generada y la referencia, capturando diferencias relevantes para la percepción humana más allá
@@ -131,7 +131,7 @@ de la comparación directa de píxeles. La \texttt{MSE} (\textit{Mean Squared Er
 error cuadrático medio entre ambas imágenes, proporcionando una medida objetiva de la fidelidad
 numérica de la reconstrucción, aunque puede ser menos sensible a la percepción visual. Finalmente,
 la métrica \texttt{CIEDE2000}, propuesta por la Comisión Internacional de Iluminación, cuantifica
-la diferencia de color teniendo en cuenta la percepción humana; en el contexto de la colorización
+la diferencia de color teniendo en cuenta la percepción humana; en el contexto de la coloración
 es especialmente importante, ya que permite evaluar si los tonos generados coinciden con los
 colores reales de referencia incluso en regiones donde pequeñas variaciones cromáticas resultan
 perceptualmente significativas. En conjunto, estas métricas ofrecen una visión más completa del
@@ -140,7 +140,7 @@ rendimiento del modelo, equilibrando precisión numérica, calidad perceptual y 
 
 \begin{table}[htbp]
     \centering
-    \caption{Resultados de colorización con modelos de difusión.}
+    \caption{Resultados de coloración con modelos de difusión.}
     \label{tab:diffusion_resultados}
     \begin{tabular}{lccc}
         \hline
@@ -156,7 +156,7 @@ rendimiento del modelo, equilibrando precisión numérica, calidad perceptual y 
 
 Al analizar los resultados, se observa que los tres modelos mantienen la estructura global de 
 las imágenes sin deformaciones, como refleja el bajo valor de \texttt{LPIPS}. No obstante, en la 
-tarea de colorización se evidencian limitaciones, ya que los colores generados difieren de los tonos 
+tarea de coloración se evidencian limitaciones, ya que los colores generados difieren de los tonos 
 de referencia. La métrica \texttt{CIEDE2000} permite cuantificar estas diferencias cromáticas desde 
 una perspectiva perceptual: valores superiores a 3 ya se consideran inaceptables en aplicaciones de 
 control de calidad, mientras que diferencias por encima de 10 indican una discrepancia claramente 
@@ -171,7 +171,7 @@ Los resultados muestran varias limitaciones claras:
 
 \begin{itemize}
     \item El modelo tiende a difuminar el texto presente en las imágenes.
-    \item Las colorizaciones presentan regiones con aspecto grisáceo o, en ocasiones, fogonazos de color incoherentes.
+    \item Las coloraciones presentan regiones con aspecto grisáceo o, en ocasiones, fogonazos de color incoherentes.
     \item El rendimiento global no alcanza niveles excelentes, aunque se observan diferencias entre las variantes de \texttt{UNet}.
     \item El número de pasos de difusión no resulta determinante en la calidad final.
 \end{itemize}
@@ -179,7 +179,7 @@ Los resultados muestran varias limitaciones claras:
 No se ha logrado un modelo de difusión capaz de colorizar imagenes a un bune nivel.
 Los modelos del artículo Diffusing Colors \cite{Zabari2023Diffusing} logran mejores resultados 
 porque se apoyan en modelos de difusión previamente entrenados a gran escala, 
-integran prompts textuales para guiar la colorización y aprovechan datasets masivos y diversos.
+integran prompts textuales para guiar la coloración y aprovechan datasets masivos y diversos.
 
 Viendo estas limitaciones, vamos a intentar atacar la única que podemos intentar 
-resolver, integran prompts textuales para guiar la colorización.
+resolver, integran prompts textuales para guiar la coloración.
