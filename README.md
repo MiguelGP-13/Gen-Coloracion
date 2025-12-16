@@ -28,7 +28,7 @@ Este proyecto se distribuye bajo la **licencia MIT**.
 ## Citación (BibTeX)
 
 ```bibtex
-@misc{perez2025coloracion,
+@misc{2fila2025coloracion,
   title        = {Coloración de Imágenes},
   author       = {Pérez, Álvaro Felipe and Gómez Prieto, Miguel and Gómez-Caraballo López-Romero, Hugo and Serrano Pinós, Carlos},
   year         = {2025},
